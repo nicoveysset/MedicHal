@@ -1,6 +1,6 @@
 # 🩺 Santé Connect — API de Prise de Rendez-vous Médicaux
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B%20%7C%208.2%2B%20%7C%208.3%2B%20%7C%208.4%2B%20%7C%208.5%2B-blue.svg)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-10%2F10%20Pass-brightgreen.svg)]()
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.3-orange.svg)]()
@@ -93,12 +93,13 @@ Le projet applique les principes de la **Clean Architecture** / **Architecture H
 ## 🚀 Démarrage Rapide
 
 ### 1. Prérequis
-- **PHP 8.1+** (compatible 8.2, 8.3, 8.4, 8.5)
+- **PHP 8.3+**
+- **PHP extension `mbstring`** (used for case-insensitive Unicode text handling)
 - **Composer**
 
 ### 2. Installation des dépendances et de l'autoloader
 ```bash
-composer dump-autoload
+composer install
 ```
 
 ### 3. Initialiser les données de démonstration (Seed)
