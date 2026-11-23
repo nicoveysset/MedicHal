@@ -1,0 +1,52 @@
+{
+    "export": {
+        "status": "not_implemented",
+        "message": "L'export groupé des documents médicaux est en cours de développement (STUB).",
+        "job_id": null,
+        "ready": false,
+        "requested_filters": {
+            "type": "PRESCRIPTION",
+            "patient_id": "pat-1"
+        }
+    },
+    "ocr_empty": {
+        "test_mode": true,
+        "ocr_status": "MOCK_SUCCESS",
+        "confidence": 0.985,
+        "extracted_text": "ORDONNANCE MÉDICALE\nDr Sophie Martin\nPatient: Jean Dupont\nPrescription: Paracétamol 1g 3x/jour pendant 5 jours.",
+        "entities": {
+            "patient_name": "Jean Dupont",
+            "detected_type": "PRESCRIPTION",
+            "suggested_tags": [
+                "ordonnance",
+                "paracetamol",
+                "traitement"
+            ]
+        },
+        "todo_warnings": [
+            "TODO: connect real OCR microservice in production",
+            "TODO: integrate antivirus and cryptographic signature"
+        ]
+    },
+    "pagination": [
+        {
+            "total": 3,
+            "limit": 2,
+            "offset": 0,
+            "titles": ["Doc 1", "Doc 2"]
+        },
+        {
+            "total": 3,
+            "limit": 2,
+            "offset": 1,
+            "titles": ["Doc 1", "Doc 2"]
+        },
+        {
+            "total": 3,
+            "limit": 2,
+            "offset": 2,
+            "titles": ["Doc 2", "Doc 3"]
+        }
+    ],
+    "delete_return": true
+}
