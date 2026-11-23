@@ -114,7 +114,7 @@ foreach ($practitioners as $p) {
         bio: $p['bio'],
         rppsNumber: $p['rpps_number']
     );
-    $db->insert('practitioners', $practitioner->getId(), $practitioner->toArray());
+    $db->insert('practitioners', $practitioner->getId(), $practitioner->toPersistenceArray());
 
     // Disponibilités récurrentes du lundi (1) au vendredi (5)
     for ($day = 1; $day <= 5; $day++) {

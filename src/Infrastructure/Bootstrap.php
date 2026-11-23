@@ -8,6 +8,7 @@ use App\Application\Common\EnterpriseServiceMeshMediator;
 use App\Application\Service\AppointmentService;
 use App\Application\Service\AvailabilityService;
 use App\Application\Service\DocumentService;
+use App\Application\Service\IcalCalendarService;
 use App\Application\Service\PatientService;
 use App\Application\Service\PractitionerService;
 use App\Domain\Repository\AppointmentRepositoryInterface;
@@ -69,6 +70,7 @@ class Bootstrap
         // 2. Domain Services & Enterprise Service Mesh Mediator
         $container->singleton(EnterpriseServiceMeshMediator::class, fn() => EnterpriseServiceMeshMediator::getInstance());
         $container->singleton(SlotCalculatorService::class, fn() => new SlotCalculatorService());
+        $container->singleton(IcalCalendarService::class, fn() => new IcalCalendarService());
 
         // 3. Application Services
         $container->singleton(PractitionerService::class, function (Container $c) {
@@ -101,7 +103,8 @@ class Bootstrap
                 patientRepository: $c->get(PatientRepositoryInterface::class),
                 availabilityRepository: $c->get(AvailabilityRepositoryInterface::class),
                 slotCalculatorService: $c->get(SlotCalculatorService::class),
-                serviceMeshMediator: $c->get(EnterpriseServiceMeshMediator::class)
+                serviceMeshMediator: $c->get(EnterpriseServiceMeshMediator::class),
+                icalCalendarService: $c->get(IcalCalendarService::class)
             );
         });
 

@@ -66,7 +66,8 @@ class SlotCalculatorService
         array $existingAppointments,
         DateTimeImmutable $startDate,
         DateTimeImmutable $endDate,
-        ?DateTimeImmutable $now = null
+        ?DateTimeImmutable $now = null,
+        array $busyCalendarSlots = []
     ): array {
         $now ??= new DateTimeImmutable();
         $slotDurationGetter = new ReflectionMethod($practitioner, 'getSlotDurationMinutes');
@@ -108,7 +109,9 @@ class SlotCalculatorService
                     $candidateSlot = new TimeSlot($slotStart, $slotEnd);
 
                     if ($slotStart > $now) {
-                        if (!$this->isSlotOccupied($candidateSlot, $existingAppointments)) {
+                        if (!$this->isSlotOccupied($candidateSlot, $existingAppointments)
+                            && !$this->overlapsBusyCalendarSlot($candidateSlot, $busyCalendarSlots)
+                        ) {
                             $daySlots[] = $candidateSlot->jsonSerialize();
                         }
                     }
@@ -137,7 +140,8 @@ class SlotCalculatorService
         array $availabilities,
         array $existingAppointments,
         TimeSlot $requestedSlot,
-        ?DateTimeImmutable $now = null
+        ?DateTimeImmutable $now = null,
+        array $busyCalendarSlots = []
     ): bool {
         $now ??= new DateTimeImmutable();
 
@@ -180,10 +184,8 @@ class SlotCalculatorService
         }
 
         // 4. Ne doit pas chevaucher de rendez-vous existant
-        return !$this-> ($requestedSlot, $existingAppointments);
-
-        // 5. le medecin ne peut pas avoir de rdv en meme temps que ical perso
-        //TODO
+        return !$this->isSlotOccupied($requestedSlot, $existingAppointments)
+            && !$this->overlapsBusyCalendarSlot($requestedSlot, $busyCalendarSlots);
     }
 
     /**
@@ -282,6 +284,20 @@ class SlotCalculatorService
             }
 
             if ($candidateSlot->overlapsWith($appointment->getSlot())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param TimeSlot[] $busyCalendarSlots
+     */
+    private function overlapsBusyCalendarSlot(TimeSlot $candidateSlot, array $busyCalendarSlots): bool
+    {
+        foreach ($busyCalendarSlots as $busySlot) {
+            if ($candidateSlot->overlapsWith($busySlot)) {
                 return true;
             }
         }

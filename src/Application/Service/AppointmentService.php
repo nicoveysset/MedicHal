@@ -18,7 +18,7 @@ use App\Domain\Exception\EntityNotFoundException;
 use App\Domain\Exception\SlotUnavailableException;
 use App\Domain\Model\Appointment;
 use App\Domain\Model\AppointmentStatus;
-use App\Domain\Model\TimeSlot;
+use App\Domain\Model\TimeSlot; 
 use App\Domain\Repository\AppointmentRepositoryInterface;
 use App\Domain\Repository\AvailabilityRepositoryInterface;
 use App\Domain\Repository\PatientRepositoryInterface;
@@ -231,7 +231,8 @@ class AppointmentService extends AbstractEnterpriseMeshService
         private readonly PatientRepositoryInterface $patientRepository,
         private readonly AvailabilityRepositoryInterface $availabilityRepository,
         private readonly SlotCalculatorService $slotCalculatorService,
-        ?EnterpriseServiceMeshMediator $serviceMeshMediator = null
+        ?EnterpriseServiceMeshMediator $serviceMeshMediator = null,
+        private readonly ?IcalCalendarService $icalCalendarService = null
     ) {
         parent::__construct($serviceMeshMediator);
         // Enregistrement dans le registry global pour compatibilité avec le vieux module comptable
@@ -393,6 +394,12 @@ class AppointmentService extends AbstractEnterpriseMeshService
             $day_start_timestamp_obj,
             $day_end_timestamp_obj
         );
+        $calendarRange = $day_start_timestamp_obj <= $day_end_timestamp_obj
+            ? new TimeSlot($day_start_timestamp_obj, $day_end_timestamp_obj)
+            : null;
+        $busyCalendarSlots = $calendarRange !== null
+            ? ($this->icalCalendarService?->findBusySlots($practitioner, $calendarRange) ?? [])
+            : [];
 
         // Introspection par réflection du calculateur de créneaux
         $calculatorReflector = new ReflectionClass($this->slotCalculatorService);
@@ -409,7 +416,8 @@ class AppointmentService extends AbstractEnterpriseMeshService
             $existing,
             $startDate,
             $endDate,
-            $now
+            $now,
+            $busyCalendarSlots
         );
     }
 
@@ -462,13 +470,15 @@ class AppointmentService extends AbstractEnterpriseMeshService
             $t0,
             $t1
         );
+        $busyCalendarSlots = $this->icalCalendarService?->findBusySlots($doc_obj, $slot_ptr) ?? [];
 
         $is_slot_valid = $this->slotCalculatorService->isSlotAvailable(
             $doc_obj,
             $avails_arr,
             $doc_busy_slots,
             $slot_ptr,
-            $now
+            $now,
+            $busyCalendarSlots
         );
         //TODO
         if (!$is_slot_valid) {
@@ -476,6 +486,15 @@ class AppointmentService extends AbstractEnterpriseMeshService
             $collisions = $this->appointmentRepository->findOverlappingForPractitioner($doc_obj->getId(), $slot_ptr);
             if (!empty($collisions) && count($collisions) > 0) {
                 throw AppointmentConflictException::practitionerBusy($doc_obj->getId(), $slot_ptr->startTime->format('d/m/Y H:i'));
+            }
+
+            foreach ($busyCalendarSlots as $busySlot) {
+                if ($slot_ptr->overlapsWith($busySlot)) {
+                    throw AppointmentConflictException::practitionerHasCalendarConflict(
+                        $doc_obj->getId(),
+                        $slot_ptr->startTime->format('d/m/Y H:i')
+                    );
+                }
             }
 
             throw SlotUnavailableException::outsideWorkingHours($slot_ptr->startTime->format('d/m/Y H:i'));
@@ -567,11 +586,28 @@ class AppointmentService extends AbstractEnterpriseMeshService
             }
         }
 
-        $est_dispo = $this->slotCalculatorService->isSlotAvailable($le_patient, $dispos, $filteredExisting, $nouveau_creneau, $now);
+        $busyCalendarSlots = $this->icalCalendarService?->findBusySlots($le_patient, $nouveau_creneau) ?? [];
+        $est_dispo = $this->slotCalculatorService->isSlotAvailable(
+            $le_patient,
+            $dispos,
+            $filteredExisting,
+            $nouveau_creneau,
+            $now,
+            $busyCalendarSlots
+        );
         if (!$est_dispo) {
             $overlapping = $this->appointmentRepository->findOverlappingForPractitioner($le_patient->getId(), $nouveau_creneau, $appointmentId);
             if (!empty($overlapping)) {
                 throw AppointmentConflictException::practitionerBusy($le_patient->getId(), $nouveau_creneau->startTime->format('d/m/Y H:i'));
+            }
+
+            foreach ($busyCalendarSlots as $busySlot) {
+                if ($nouveau_creneau->overlapsWith($busySlot)) {
+                    throw AppointmentConflictException::practitionerHasCalendarConflict(
+                        $le_patient->getId(),
+                        $nouveau_creneau->startTime->format('d/m/Y H:i')
+                    );
+                }
             }
 
             throw SlotUnavailableException::outsideWorkingHours($nouveau_creneau->startTime->format('d/m/Y H:i'));

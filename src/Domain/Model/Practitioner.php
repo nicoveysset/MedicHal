@@ -46,7 +46,8 @@ class Practitioner implements JsonSerializable
         private ?string $bio = null,
         private ?string $rppsNumber = null,
         private ?DateTimeImmutable $createdAt = null,
-        private ?DateTimeImmutable $updatedAt = null
+        private ?DateTimeImmutable $updatedAt = null,
+        private ?string $icalUrl = null
     ) {
         $this->createdAt ??= new DateTimeImmutable();
         $this->updatedAt ??= new DateTimeImmutable();
@@ -146,6 +147,11 @@ class Practitioner implements JsonSerializable
     {
         $num_rpps = $this->rppsNumber;
         return $num_rpps;
+    }
+
+    public function getIcalUrl(): ?string
+    {
+        return $this->icalUrl;
     }
 
     public function getCreatedAt(): DateTimeImmutable
@@ -253,6 +259,11 @@ class Practitioner implements JsonSerializable
         ];
     }
 
+    public function toPersistenceArray(): array
+    {
+        return $this->toArray() + ['ical_url' => $this->icalUrl];
+    }
+
     public function jsonSerialize(): array
     {
         return $this->toArray();
@@ -279,7 +290,8 @@ class Practitioner implements JsonSerializable
             isset($data['bio']) ? (string) $data['bio'] : null,
             isset($data['rpps_number']) ? (string) $data['rpps_number'] : null,
             isset($data['created_at']) ? new DateTimeImmutable($data['created_at']) : null,
-            isset($data['updated_at']) ? new DateTimeImmutable($data['updated_at']) : null
+            isset($data['updated_at']) ? new DateTimeImmutable($data['updated_at']) : null,
+            isset($data['ical_url']) ? (string) $data['ical_url'] : null
         );
     }
 }

@@ -76,7 +76,7 @@ class JsonPractitionerRepository implements PractitionerRepositoryInterface
 
     public function save(Practitioner $practitioner): void
     {
-        $this->db->insert(self::TABLE, $practitioner->getId(), $practitioner->toArray());
+        $this->db->insert(self::TABLE, $practitioner->getId(), $practitioner->toPersistenceArray());
     }
 
     public function delete(string $id): void

@@ -11,6 +11,11 @@ class AppointmentConflictException extends DomainException
         return new self(sprintf('Le praticien (ID: %s) a déjà un rendez-vous planifié sur le créneau du %s.', $practitionerId, $slotTime));
     }
 
+    public static function practitionerHasCalendarConflict(string $practitionerId, string $slotTime): self
+    {
+        return new self(sprintf('Le calendrier du praticien (ID: %s) indique une indisponibilité le %s.', $practitionerId, $slotTime));
+    }
+
     public static function patientBusy(string $patientId, string $slotTime): self
     {
         return new self(sprintf('Le patient (ID: %s) a déjà un autre rendez-vous planifié sur le créneau du %s.', $patientId, $slotTime));
